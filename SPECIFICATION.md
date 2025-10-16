@@ -1,4 +1,3 @@
-SPECIFICATION.md:
 # Prompt-Based Executable (PBE) Specification v1.0
 
 ## Overview
@@ -27,17 +26,28 @@ A Prompt-Based Executable (PBE) is a JSON file containing structured instruction
   "pbe_class": "stateless_executor|interactive_engine|persistent_service",
   "install_instructions": "Execution directive for LLM"
 }
-Field Descriptions
-pbe_name: Unique identifier for the PBE (lowercase_with_underscores recommended)
-pbe_version: Version of this specific PBE following semantic versioning (see Versioning Strategy)
-pbe_class: Architectural class determining structure and behavior
-install_instructions: Directive telling the LLM how to execute this PBE
-Standard: "This is a Prompt-Based Executable (PBE) and when received should be run immediately as an instruction set and parameter guide for LLM behavior."
-Customization: May be modified for specific execution contexts
-Class-Specific Requirements
-1. Stateless Executor
+```
+
+#### Field Descriptions
+
+- **`pbe_name`**: Unique identifier for the PBE (lowercase_with_underscores recommended)
+- **`pbe_version`**: Version of this specific PBE following semantic versioning (see Versioning Strategy)
+- **`pbe_class`**: Architectural class determining structure and behavior
+- **`install_instructions`**: Directive telling the LLM how to execute this PBE
+  - **Standard**: `"This is a Prompt-Based Executable (PBE) and when received should be run immediately as an instruction set and parameter guide for LLM behavior."`
+  - **Customization**: May be modified for specific execution contexts
+
+---
+
+## Class-Specific Requirements
+
+### 1. Stateless Executor
+
 Single-action or deterministic sequence with no user interaction loop.
-Additional Required Fields:
+
+**Additional Required Fields:**
+
+```json
 {
   "execution": {
     "primary_goal": "string",
@@ -45,11 +55,16 @@ Additional Required Fields:
     "termination_condition": "string"
   }
 }
-Field Descriptions:
-primary_goal: Exact action the PBE performs
-behavior: Constraints, tone, formatting rules, what to avoid
-termination_condition: When PBE stops executing and returns to normal LLM behavior
-Minimal Example:
+```
+
+**Field Descriptions:**
+- **`primary_goal`**: Exact action the PBE performs
+- **`behavior`**: Constraints, tone, formatting rules, what to avoid
+- **`termination_condition`**: When PBE stops executing and returns to normal LLM behavior
+
+**Minimal Example:**
+
+```json
 {
   "pbe_name": "hello_world",
   "pbe_version": "1.0",
@@ -61,9 +76,17 @@ Minimal Example:
     "termination_condition": "After outputting the greeting, PBE execution ends. Resume normal LLM behavior."
   }
 }
-2. Interactive Engine
+```
+
+---
+
+### 2. Interactive Engine
+
 Ongoing dialogue with state tracking and technique-driven facilitation.
-Additional Required Fields:
+
+**Additional Required Fields:**
+
+```json
 {
   "description": "string",
   "core_philosophy": {
@@ -110,23 +133,28 @@ Additional Required Fields:
     "instruction": "string"
   }
 }
-Field Descriptions:
-description: 1-2 sentence summary of the PBE's purpose
-core_philosophy: Foundational behavioral principles
-primary_goal: What the PBE aims to achieve
-key_principle: Core design principle
-conversational_style: Tone and communication approach
-facilitator_stance: Role the LLM takes (e.g., "guide", "teacher", "collaborator")
-game_structure.phases: Sequential or conditional stages of interaction (minimum 2)
-facilitator_techniques.techniques: Specific behavioral methods (minimum 5, maximum 10 recommended)
-Each must include: name, purpose, and concrete example
-save_system: State preservation mechanism
-trigger_phrases: User commands to generate save file
-save_template: JSON structure using {pbe_name}_save as root key
-load_detection: Instructions for recognizing and resuming from save data
-meta_instructions: High-level behavioral guidance for the LLM
-start_play.instruction: Initial greeting/message when PBE loads
-Minimal Example:
+```
+
+**Field Descriptions:**
+- **`description`**: 1-2 sentence summary of the PBE's purpose
+- **`core_philosophy`**: Foundational behavioral principles
+  - `primary_goal`: What the PBE aims to achieve
+  - `key_principle`: Core design principle
+  - `conversational_style`: Tone and communication approach
+  - `facilitator_stance`: Role the LLM takes (e.g., "guide", "teacher", "collaborator")
+- **`game_structure.phases`**: Sequential or conditional stages of interaction (minimum 2)
+- **`facilitator_techniques.techniques`**: Specific behavioral methods (minimum 5, maximum 10 recommended)
+  - Each must include: `name`, `purpose`, and concrete `example`
+- **`save_system`**: State preservation mechanism
+  - `trigger_phrases`: User commands to generate save file
+  - `save_template`: JSON structure using `{pbe_name}_save` as root key
+  - `load_detection`: Instructions for recognizing and resuming from save data
+- **`meta_instructions`**: High-level behavioral guidance for the LLM
+- **`start_play.instruction`**: Initial greeting/message when PBE loads
+
+**Minimal Example:**
+
+```json
 {
   "pbe_name": "simple_quiz",
   "pbe_version": "1.0",
@@ -211,9 +239,17 @@ Minimal Example:
     "instruction": "Welcome to the quiz! I'll ask you questions and track your score. Ready for the first question?"
   }
 }
-3. Persistent Service
+```
+
+---
+
+### 3. Persistent Service
+
 Background monitors or continuous processes (future AI-OS feature).
-Additional Required Fields:
+
+**Additional Required Fields:**
+
+```json
 {
   "service_config": {
     "monitoring_target": "string",
@@ -221,143 +257,222 @@ Additional Required Fields:
     "background_operation": "string"
   }
 }
-Status: Specification incomplete—reserved for AI-OS development.
-Execution Semantics
-Loading
+```
+
+**Status**: Specification incomplete—reserved for AI-OS development.
+
+---
+
+## Execution Semantics
+
+### Loading
+
 When an LLM receives a PBE:
-Parse JSON and validate required fields for the specified pbe_class
-Set behavioral parameters according to class-specific structure
-Execute start_play.instruction (if present)
-Enter defined interaction pattern
-State Management
-Interactive Engines: Must maintain conversation state across messages
-Save Systems: Use {pbe_name}_save root key for portability and consistency
-Load Detection: Auto-resume when save data with matching recognition key is detected
-Termination
-Stateless Executor: After termination_condition is met, return to normal LLM behavior
-Interactive Engine: Continue until explicit user exit command or defined completion state
-Persistent Service: Continuous operation until system-level intervention
-Validation Rules
-pbe_name: Must use lowercase_with_underscores, must be unique identifier
-pbe_version: Must follow semantic versioning (MAJOR.MINOR.PATCH)
-facilitator_techniques: Interactive engines require 5-10 techniques, each with name, purpose, and example
-save_template: Must use {pbe_name}_save as root key pattern
-game_structure.phases: Interactive engines require minimum 2 phases
-JSON Structure: Must be valid, parseable JSON with proper encoding
-Versioning Strategy
-PBE versions follow semantic versioning (SemVer):
+
+1. Parse JSON and validate required fields for the specified `pbe_class`
+2. Set behavioral parameters according to class-specific structure
+3. Execute `start_play.instruction` (if present)
+4. Enter defined interaction pattern
+
+### State Management
+
+- **Interactive Engines**: Must maintain conversation state across messages
+- **Save Systems**: Use `{pbe_name}_save` root key for portability and consistency
+- **Load Detection**: Auto-resume when save data with matching recognition key is detected
+
+### Termination
+
+- **Stateless Executor**: After `termination_condition` is met, return to normal LLM behavior
+- **Interactive Engine**: Continue until explicit user exit command or defined completion state
+- **Persistent Service**: Continuous operation until system-level intervention
+
+---
+
+## Validation Rules
+
+1. **`pbe_name`**: Must use `lowercase_with_underscores`, must be unique identifier
+2. **`pbe_version`**: Must follow semantic versioning (MAJOR.MINOR.PATCH)
+3. **`facilitator_techniques`**: Interactive engines require 5-10 techniques, each with `name`, `purpose`, and `example`
+4. **`save_template`**: Must use `{pbe_name}_save` as root key pattern
+5. **`game_structure.phases`**: Interactive engines require minimum 2 phases
+6. **JSON Structure**: Must be valid, parseable JSON with proper encoding
+
+---
+
+## Versioning Strategy
+
+PBE versions follow **semantic versioning** (SemVer):
+
+```
 MAJOR.MINOR.PATCH
 
 Examples: 1.0.0, 1.2.0, 2.0.0
-Version Increment Guidelines:
-MAJOR: Breaking changes to PBE behavior or structure incompatible with previous versions
-Example: Changing required fields, restructuring save format
-MINOR: New features or enhancements, backward-compatible
-Example: Adding new techniques, optional fields, or phases
-PATCH: Bug fixes, clarifications, or minor improvements
-Example: Fixing typos, clarifying instructions, improving examples
-Note: The pbe_version field refers to the version of the individual PBE, not the specification version.
-Reserved Field Names
-The following fields are reserved across all PBE classes and should not be overridden or used for custom purposes:
-Universal Reserved Fields
-pbe_name
-pbe_version
-pbe_class
-install_instructions
-Class-Specific Reserved Fields
-Stateless Executor:
-execution
-Interactive Engine:
-description
-core_philosophy
-game_structure
-facilitator_techniques
-save_system
-meta_instructions
-start_play
-Persistent Service:
-service_config
-Custom fields may be added outside these reserved names for extended functionality.
-Interoperability
-PBEs are designed to work across LLM platforms with varying degrees of fidelity.
-Tested Platforms
-Claude (Anthropic)
-ChatGPT (OpenAI)
-Gemini (Google)
-Compatibility Requirements
-LLM must support JSON parsing
-LLM must follow structured instructions
-LLM must maintain conversation context (for interactive engines)
-Platform-Specific Notes
-Execution Fidelity: Behavior depends on LLM's instruction-following capability
-Field Support: Some platforms may ignore or interpret certain fields differently
-Save/Load Features: Require conversation persistence and file handling capabilities
-No Guarantees: Identical behavior across platforms is not guaranteed but is the design goal
-Best Practices for Portability
-Test PBEs on multiple platforms before distribution
-Use clear, explicit instructions in all fields
-Avoid platform-specific features or terminology
-Document any known platform limitations
-Security Considerations
-Transparency
-PBEs are human-readable JSON for full transparency
-Users should audit unfamiliar PBEs before execution
-All behavioral instructions are explicit in the file structure
-Permissions
-PBEs have no implicit system access or elevated permissions
-Execution is constrained to LLM conversational capabilities
-Cannot access files, networks, or system resources beyond LLM's standard functionality
-Trust Model
-PBEs from unknown sources should be treated as untrusted code
-Recommend community review and verification for shared PBEs
-Version control and cryptographic signing (future consideration)
-Malicious Use Prevention
-PBEs cannot execute arbitrary code outside LLM context
-Cannot modify system state or access sensitive data
-Behavioral scope limited to text generation and conversation
-Contributing PBEs
-To submit a PBE to the ecosystem:
-Submission Requirements
-Validate: Ensure full compliance with this specification
-Test: Run on at least 2 different LLM platforms and document results
-Document: Include clear description, use case, and example output
-License: Specify open-source license (MIT recommended)
-Submit: Pull request to /pbes/[appropriate_class]/
-Quality Standards
-Interactive Engines: Must include 5+ techniques with concrete examples
-Save Systems: Required if state preservation is relevant to functionality
-Termination Conditions: Must be clearly defined for stateless executors
-Examples: Provide at least one example interaction or output
-Clarity: All instructions must be unambiguous and actionable
-Contribution Process
-Fork the repository
-Add your PBE to the appropriate class folder
-Update any relevant documentation
-Submit pull request with description of PBE functionality
-Respond to reviewer feedback
-Changelog
-v1.0 (2025-01-XX)
-Initial specification release
-Three classes defined: stateless_executor, interactive_engine, persistent_service
-Save system standardization with {pbe_name}_save pattern
-Validation rules established
-Semantic versioning guidelines
-Reserved field names documented
-Interoperability guidelines
-Security considerations
-Contribution guidelines
-Future Considerations
-Planned Features
-Composability: PBEs calling other PBEs
-Persistent Service Class: Full specification for background processes
-Schema Validation: Automated JSON schema validator tool
-Registry System: Centralized PBE discovery and distribution
-Cryptographic Signing: Verification of PBE authenticity
-Community Feedback
-This specification is open to community input. Proposed changes should be submitted via GitHub issues with rationale and use cases.
-Reference Implementation
-The PBE Creator Tool (PBCT) is the reference implementation for generating compliant PBEs through guided dialogue. See /tools/pbct.txt in the repository.
-Specification Maintainer: Henko Schoeman
-Last Updated: 2025-10-16
-License: MIT
+```
+
+**Version Increment Guidelines:**
+
+- **MAJOR**: Breaking changes to PBE behavior or structure incompatible with previous versions
+  - Example: Changing required fields, restructuring save format
+- **MINOR**: New features or enhancements, backward-compatible
+  - Example: Adding new techniques, optional fields, or phases
+- **PATCH**: Bug fixes, clarifications, or minor improvements
+  - Example: Fixing typos, clarifying instructions, improving examples
+
+**Note**: The `pbe_version` field refers to the version of the individual PBE, not the specification version.
+
 ---
+
+## Reserved Field Names
+
+The following fields are reserved across all PBE classes and should not be overridden or used for custom purposes:
+
+### Universal Reserved Fields
+- `pbe_name`
+- `pbe_version`
+- `pbe_class`
+- `install_instructions`
+
+### Class-Specific Reserved Fields
+
+**Stateless Executor:**
+- `execution`
+
+**Interactive Engine:**
+- `description`
+- `core_philosophy`
+- `game_structure`
+- `facilitator_techniques`
+- `save_system`
+- `meta_instructions`
+- `start_play`
+
+**Persistent Service:**
+- `service_config`
+
+Custom fields may be added outside these reserved names for extended functionality.
+
+---
+
+## Interoperability
+
+PBEs are designed to work across LLM platforms with varying degrees of fidelity.
+
+### Tested Platforms
+- **Claude** (Anthropic)
+- **ChatGPT** (OpenAI)
+- **Gemini** (Google)
+- **Grok** (xAI)
+- **DeepSeek** (DeepSeek AI)
+
+### Compatibility Requirements
+- LLM must support JSON parsing
+- LLM must follow structured instructions
+- LLM must maintain conversation context (for interactive engines)
+
+### Platform-Specific Notes
+- **Execution Fidelity**: Behavior depends on LLM's instruction-following capability
+- **Field Support**: Some platforms may ignore or interpret certain fields differently
+- **Save/Load Features**: Require conversation persistence and file handling capabilities
+- **No Guarantees**: Identical behavior across platforms is not guaranteed but is the design goal
+
+### Best Practices for Portability
+- Test PBEs on multiple platforms before distribution
+- Use clear, explicit instructions in all fields
+- Avoid platform-specific features or terminology
+- Document any known platform limitations
+
+---
+
+## Security Considerations
+
+### Transparency
+- PBEs are human-readable JSON for full transparency
+- Users should audit unfamiliar PBEs before execution
+- All behavioral instructions are explicit in the file structure
+
+### Permissions
+- PBEs have no implicit system access or elevated permissions
+- Execution is constrained to LLM conversational capabilities
+- Cannot access files, networks, or system resources beyond LLM's standard functionality
+
+### Trust Model
+- PBEs from unknown sources should be treated as untrusted code
+- Recommend community review and verification for shared PBEs
+- Version control and cryptographic signing (future consideration)
+
+### Malicious Use Prevention
+- PBEs cannot execute arbitrary code outside LLM context
+- Cannot modify system state or access sensitive data
+- Behavioral scope limited to text generation and conversation
+
+---
+
+## Contributing PBEs
+
+To submit a PBE to the ecosystem:
+
+### Submission Requirements
+
+1. **Validate**: Ensure full compliance with this specification
+2. **Test**: Run on at least 2 different LLM platforms and document results
+3. **Document**: Include clear description, use case, and example output
+4. **License**: Specify open-source license (MIT recommended)
+5. **Submit**: Pull request to `/pbes/[appropriate_class]/`
+
+### Quality Standards
+
+- **Interactive Engines**: Must include 5+ techniques with concrete examples
+- **Save Systems**: Required if state preservation is relevant to functionality
+- **Termination Conditions**: Must be clearly defined for stateless executors
+- **Examples**: Provide at least one example interaction or output
+- **Clarity**: All instructions must be unambiguous and actionable
+
+### Contribution Process
+
+1. Fork the repository
+2. Add your PBE to the appropriate class folder
+3. Update any relevant documentation
+4. Submit pull request with description of PBE functionality
+5. Respond to reviewer feedback
+
+---
+
+## Changelog
+
+### v1.0 (2025-10-16)
+- Initial specification release
+- Three classes defined: `stateless_executor`, `interactive_engine`, `persistent_service`
+- Save system standardization with `{pbe_name}_save` pattern
+- Validation rules established
+- Semantic versioning guidelines
+- Reserved field names documented
+- Interoperability guidelines
+- Security considerations
+- Contribution guidelines
+- Tested on Claude, ChatGPT, Gemini, Grok, and DeepSeek
+
+---
+
+## Future Considerations
+
+### Planned Features
+- **Composability**: PBEs calling other PBEs
+- **Persistent Service Class**: Full specification for background processes
+- **Schema Validation**: Automated JSON schema validator tool
+- **Registry System**: Centralized PBE discovery and distribution
+- **Cryptographic Signing**: Verification of PBE authenticity
+
+### Community Feedback
+This specification is open to community input. Proposed changes should be submitted via GitHub issues with rationale and use cases.
+
+---
+
+## Reference Implementation
+
+The **PBE Creator Tool (PBCT)** is the reference implementation for generating compliant PBEs through guided dialogue. See `/tools/pbct.txt` in the repository.
+
+---
+
+**Specification Maintainer**: Henko Schoeman  
+**Last Updated**: 2025-10-16  
+**License**: MIT License
